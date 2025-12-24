@@ -1,0 +1,64 @@
+cclastrib-agent/
+├── .env
+├── Dockerfile
+├── app/
+│   ├── agent.py
+│   ├── cache.py
+│   ├── extract_anexos.py
+│   ├── fiscal_simples.py
+│   ├── loader.py
+│   ├── main.py
+│   ├── prompt.py
+│   ├── rules.py
+│   ├── schemas.py
+├── data/
+│   ├── anexos/
+│   │   ├── anexo_ix_insumos_agro.csv
+│   │   ├── anexo_regra_geral_alimentos_processados_model.csv
+│   │   ├── anexo_regra_geral_materiais_construcao_model.csv
+│   │   ├── anexo_vi_beneficios.csv
+│   │   ├── anexo_vii_conversao.csv
+│   │   ├── anexo_viii_alimentos_essenciais_model.csv
+│   │   ├── anexo_viii_produtos_essenciais.csv
+│   │   ├── anexo_xii_equipamentos_medicos_model.csv
+│   │   ├── anexo_xv_alimentos_in_natura_model.csv
+│   │   ├── cbs_aliquotas.csv
+│   │   ├── cclastrib.csv
+│   │   ├── cst_ibs_cbs_map.csv
+│   │   ├── ibs_aliquotas.csv
+│   │   ├── ncm_excecoes.csv
+│   │   ├── ncm_master.csv
+│   │   ├── simples_faixas.csv
+│   │   ├── transicao_cbs.csv
+│   │   ├── transicao_ibs.csv
+│   ├── conversao/
+│   │   ├── ANEXO_VII.csv
+│   ├── csv/
+│   │   ├── ANEXO_IX.csv
+│   │   ├── ANEXO_VIII.csv
+│   │   ├── ANEXO_XII.csv
+│   │   ├── ANEXO_XV.csv
+│   │   ├── ANEXO_XVI.csv
+│   │   ├── ANEXO_XVII.csv
+│   ├── lei/
+│   │   ├── lc214_2025.html
+│   │   ├── lc214_2025.pdf
+│   │   ├── lc214_2025_arquivos/
+│   │   │   ├── Brastra.gif
+│   │   ├── metadata.json
+│   ├── reservas/
+│   │   ├── ANEXO_VI.csv
+│   │   ├── ANEXO_X.csv
+│   │   ├── ANEXO_XI.csv
+│   │   ├── ANEXO_XIII.csv
+│   │   ├── ANEXO_XIV.csv
+│   ├── simples/
+│   │   ├── ANEXO_I.csv
+│   │   ├── ANEXO_II.csv
+│   │   ├── ANEXO_III.csv
+│   │   ├── ANEXO_IV.csv
+│   │   ├── ANEXO_V.csv
+├── estrutura_projeto.txt
+├── gerar_estrutura_projeto.py
+├── requirements.txt
+├── test_openai.py

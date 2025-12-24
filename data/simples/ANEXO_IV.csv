@@ -1,0 +1,106 @@
+anexo;linha;ncm;descricao;aliquota;observacao;vigencia_inicio;vigencia_fim
+ANEXO IV;1;"Receita Bruta em 12 
+			Meses (em R$)";Alíquota;Valor a Deduzir (em R$);;;
+ANEXO IV;2;1ª Faixa;Até 180.000,00;4,50%;;;
+ANEXO IV;3;2ª Faixa;"De 180.000,01 a 
+			360.000,00";9,00%;;;
+ANEXO IV;4;3ª Faixa;"De 360.000,01 a 
+			720.000,00";10,20%;;;
+ANEXO IV;5;4ª Faixa;"De 720.000,01 a 
+			1.800.000,00";14,00%;;;
+ANEXO IV;6;5ª Faixa;"De 1.800.000,01 a 
+			3.600.000,00";22,00%;;;
+ANEXO IV;7;6ª Faixa;"De 3.600.000,01 a 
+			4.800.000,00";32,90%;;;
+ANEXO IV;8;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;9;;IRPJ;CSLL;;;
+ANEXO IV;10;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;11;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;12;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;13;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;14;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;15;6ª Faixa;53,71%;21,59%;;;
+ANEXO IV;16;Faixa;IRPJ;CSLL;;;
+ANEXO IV;17;"5ª Faixa, com alíquota 
+			efetiva superior a 12,5%";"(Alíquota efetiva - 5%) 
+			x 31,33%";"(Alíquota efetiva - 5%) 
+			x 32,00%";;;
+ANEXO IV;18;"Receita Bruta em 12 
+			Meses (em R$)";Alíquota;Valor a Deduzir (em R$);;;
+ANEXO IV;19;1ª Faixa;Até 180.000,00;4,50%;;;
+ANEXO IV;20;2ª Faixa;"De 180.000,01 a 
+			360.000,00";9,00%;;;
+ANEXO IV;21;3ª Faixa;"De 360.000,01 a 
+			720.000,00";10,20%;;;
+ANEXO IV;22;4ª Faixa;"De 720.000,01 a 
+			1.800.000,00";14,00%;;;
+ANEXO IV;23;5ª Faixa;"De 1.800.000,01 a 
+			3.600.000,00";22,00%;;;
+ANEXO IV;24;6ª Faixa;"De 3.600.000,01 a 
+			4.800.000,00";33,00%;;;
+ANEXO IV;25;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;26;;IRPJ;CSLL;;;
+ANEXO IV;27;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;28;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;29;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;30;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;31;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;32;6ª Faixa;53,50%;21,50%;;;
+ANEXO IV;33;Faixa;IRPJ;CSLL;;;
+ANEXO IV;34;"5ª Faixa, com alíquota 
+			efetiva superior a 12,5%";"(Alíquota efetiva - 5%) 
+			x 31,33%";"(Alíquota efetiva - 5%) 
+			x 32,00%";;;
+ANEXO IV;35;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;36;;IRPJ;CSLL;;;
+ANEXO IV;37;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;38;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;39;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;40;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;41;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;42;6ª Faixa;53,50%;21,50%;;;
+ANEXO IV;43;Faixa;IRPJ;CSLL;;;
+ANEXO IV;44;"5ª Faixa, com alíquota 
+			efetiva superior a 12,5%";"(Alíquota efetiva - 5%) 
+			x 31,33%";"(Alíquota efetiva - 5%) 
+			x 32,00%";;;
+ANEXO IV;45;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;46;;IRPJ;CSLL;;;
+ANEXO IV;47;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;48;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;49;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;50;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;51;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;52;6ª Faixa;53,50%;21,50%;;;
+ANEXO IV;53;Faixa;IRPJ;CSLL;;;
+ANEXO IV;54;"5ª Faixa, com alíquota 
+			efetiva superior a 12,5%";"(Alíquota efetiva - 5%) 
+			x 31,33%";"(Alíquota efetiva - 5%) 
+			x 32,00%";;;
+ANEXO IV;55;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;56;;IRPJ;CSLL;;;
+ANEXO IV;57;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;58;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;59;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;60;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;61;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;62;6ª Faixa;53,50%;21,50%;;;
+ANEXO IV;63;Faixa;IRPJ;CSLL;;;
+ANEXO IV;64;"5ª Faixa, com alíquota 
+			efetiva superior a 12,5%";"(Alíquota efetiva - 5%) 
+			x 31,33%";"(Alíquota efetiva - 5%) 
+			x 32,00%";;;
+ANEXO IV;65;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO IV;66;IRPJ;CSLL;CBS;;;
+ANEXO IV;67;1ª Faixa;18,80%;15,20%;;;
+ANEXO IV;68;2ª Faixa;19,80%;15,20%;;;
+ANEXO IV;69;3ª Faixa;20,80%;15,20%;;;
+ANEXO IV;70;4ª Faixa;17,80%;19,20%;;;
+ANEXO IV;71;5ª Faixa;18,80%;19,20%;;;
+ANEXO IV;72;6ª Faixa;53,50%;21,50%;;;

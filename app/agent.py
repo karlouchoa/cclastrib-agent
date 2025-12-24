@@ -1,0 +1,264 @@
+from __future__ import annotations
+
+import os
+from datetime import date, timedelta
+from typing import Any, Dict, List, Optional
+
+from .schemas import (
+    ClassifyRequest,
+    ClassifyResponse,
+    FundamentoItem,
+    BlocoResultado,
+    XmlPayload,
+    IdeTags,
+    IdeCompraGov,
+    IdePagAntecipado,
+    ProdutoTags,
+    DFeReferenciado,
+    ImpostoTags,
+    IBSCBSTags,
+    GIBSCBS,
+    IBSUF,
+    IBSMun,
+    CBS,
+    TotaisTags,
+    IBSCBSTotTags,
+    TotaisIBS,
+    TotaisCBS,
+    TotaisMono,
+    TotaisEstorno,
+    ISTags,
+)
+from .rules import load_sources, classify, norm_ncm
+from .cache import TTLCache, make_cache_key
+
+
+class CClastribAgent:
+    def __init__(self, data_anexos_dir: str, cache_ttl_seconds: int = 3600):
+        self.data_anexos_dir = data_anexos_dir
+        self._cache = TTLCache(default_ttl_seconds=cache_ttl_seconds)
+        self._sources = load_sources(data_anexos_dir)
+
+    def reload_sources(self) -> None:
+        self._sources = load_sources(self.data_anexos_dir)
+        self._cache.clear()
+
+    def handle(self, req: ClassifyRequest) -> ClassifyResponse:
+        # Se você manda ano_emissao, use ele SEMPRE
+        # Data de emissão SEMPRE vem do ano_emissao
+        if req.ano_emissao:
+            data_emissao = date(int(req.ano_emissao), 1, 1)
+        else:
+            data_emissao = date.today()
+
+        ncm_digits = norm_ncm(req.ncm)
+
+        cache_key = make_cache_key(
+            req.regime_fiscal_emitente,
+            req.cfop,
+            req.uf_emitente,
+            req.uf_destinatario,
+            req.cst_icms,
+            ncm_digits,
+            data_emissao.isoformat(),
+            "GOV" if req.compra_governo else "NOGOV",
+            "DOA" if req.ind_doacao else "NODOA",
+        )
+
+        cached = self._cache.get(cache_key)
+        if cached:
+            return cached
+
+        result = classify(
+            self._sources,
+            regime=req.regime_fiscal_emitente,
+            cfop=req.cfop,
+            uf_emit=req.uf_emitente,
+            uf_dest=req.uf_destinatario,
+            cst_icms=req.cst_icms,
+            ncm=req.ncm,
+            data_emissao=data_emissao,
+            compra_gov=bool(req.compra_governo),
+            ind_doacao=bool(req.ind_doacao),
+        )
+
+        # -------------------------
+        # Monta fundamentos estruturados
+        # -------------------------
+        fundamentos_gerais = [
+            FundamentoItem(**f) for f in result.get("fundamentos_gerais", [])
+        ]
+
+        cclastrib = BlocoResultado(
+            codigo=result["cclastrib"]["codigo"],
+            descricao=result["cclastrib"]["descricao"],
+            fundamento=[
+                FundamentoItem(
+                    regra="LC 214/2025",
+                    motivo="Classificação operacional baseada em regime/CFOP/UF/CST e tabelas internas",
+                    fonte="cclastrib.csv",
+                )
+            ],
+        )
+
+        ibs = BlocoResultado(
+            aliquota=result["ibs"]["aliquota"],
+            fundamento=[
+                FundamentoItem(
+                    regra="LC 214/2025",
+                    motivo="Alíquota IBS calculada pela transição (percentual_ibs) + reduções por NCM/categoria",
+                    fonte="transicao_ibs.csv / ncm_master.csv",
+                )
+            ],
+        )
+
+        cbs = BlocoResultado(
+            aliquota=result["cbs"]["aliquota"],
+            fundamento=[
+                FundamentoItem(
+                    regra="LC 214/2025",
+                    motivo="Alíquota CBS calculada por alíquota base + transição + reduções por NCM/categoria",
+                    fonte="transicao_cbs.csv / ncm_master.csv",
+                )
+            ],
+        )
+
+        # -------------------------
+        # Monta payload "XML"
+        # -------------------------
+        ide = IdeTags(
+            dPrevEntrega=(data_emissao + timedelta(days=10)).isoformat(),
+            cMunFGIBS=req.cod_municipio_fg_ibs,
+            tpNFDebito="tdNenhum",
+            tpNFCredito="tcNenhum",
+            gCompraGov=(
+                IdeCompraGov(tpEnteGov="tcgEstados", pRedutor=5, tpOperGov="togFornecimento")
+                if req.compra_governo
+                else None
+            ),
+            gPagAntecipado=[IdePagAntecipado(refNFe=x) for x in (req.refs_pag_antecipado or [])],
+        )
+
+        dfe_ref = None
+        ch = (req.dfe_referenciado_chave or "").strip()
+        if ch:
+            dfe_ref = DFeReferenciado(
+                chaveAcesso=ch,
+                nItem=req.dfe_referenciado_nitem or 1,
+            )
+
+        produto = ProdutoTags(
+            indBemMovelUsado="tieNenhum",
+            vItem=req.valor_item,
+            DFeReferenciado=dfe_ref,
+        )
+
+        # IBS/CBS: preenche CST/cClassTrib e alíquotas em gIBSCBS
+        cst_ibs_cbs = result.get("cst_ibs_cbs")
+        cclass_trib = result.get("cclass_trib")
+
+        ind_doacao_tag = "tieSim" if req.ind_doacao else "tieNao"
+
+        # Base de cálculo e valores (se valor_item vier)
+        vbc = float(req.valor_item) if req.valor_item is not None else None
+        p_ibs = float(result["ibs"]["aliquota"]) * 100.0 if result["ibs"]["aliquota"] is not None else None
+        p_cbs = float(result["cbs"]["aliquota"]) * 100.0 if result["cbs"]["aliquota"] is not None else None
+
+        v_ibs = (vbc * (p_ibs / 100.0)) if (vbc is not None and p_ibs is not None) else None
+        v_cbs = (vbc * (p_cbs / 100.0)) if (vbc is not None and p_cbs is not None) else None
+
+        g_ibscbs = GIBSCBS(
+            vBC=vbc,
+            gIBSUF=IBSUF(pIBSUF=p_ibs, vIBSUF=v_ibs),
+            gIBSMun=IBSMun(pIBSMun=None, vIBSMun=None),
+            vIBS=v_ibs,  # se você quiser dividir UF/Mun, ajuste aqui
+            gCBS=CBS(pCBS=p_cbs, vCBS=v_cbs),
+            gTribRegular=None,
+            gTribCompraGov=None,
+        )
+
+        ibscbs_tags = IBSCBSTags(
+            CST=cst_ibs_cbs,          # "000"
+            cClassTrib=cclass_trib,   # "000001"
+            indDoacao=ind_doacao_tag,
+            gIBSCBS=g_ibscbs,
+        )
+
+
+        # IS (se aplicável)
+        isel = None
+        if result["flags"].get("aplicar_is"):
+            # aqui você deverá mapear CSTIS/cClassTribIS e alíquotas por categoria/NCM quando definir isso
+            isel = ISTags(
+                CSTIS="cstis000",
+                cClassTribIS="000001",
+                vBCIS=vbc,
+                pIS=5.0,
+                pISEspec=5.0,
+                uTrib="UNIDAD",
+                qTrib=1.0,
+                vIS=(vbc * 0.05) if vbc is not None else None,
+            )
+
+        imposto = ImpostoTags(isel=isel, ibscbs=ibscbs_tags)
+
+        # Totais (mínimos coerentes)
+        ibscbs_tot = IBSCBSTotTags(
+            vBCIBSCBS=vbc,
+            gIBS=TotaisIBS(
+                vIBS=v_ibs,
+                vCredPres=None,
+                vCredPresCondSus=None,
+                gIBSUFTot={"vDif": None, "vDevTrib": None, "vIBSUF": v_ibs},
+                gIBSMunTot={"vDif": None, "vDevTrib": None, "vIBSMun": None},
+            ),
+            gCBS=TotaisCBS(
+                vDif=None,
+                vDevTrib=None,
+                vCBS=v_cbs,
+                vCredPres=None,
+                vCredPresCondSus=None,
+            ),
+            gMono=TotaisMono(),
+            gEstornoCred=TotaisEstorno(),
+        )
+
+        v_is = isel.vIS if isel else None
+        v_nf_tot = None
+        if vbc is not None:
+            v_nf_tot = vbc
+            if v_ibs is not None:
+                v_nf_tot += v_ibs
+            if v_cbs is not None:
+                v_nf_tot += v_cbs
+            if v_is is not None:
+                v_nf_tot += v_is
+
+        totais = TotaisTags(
+            isTot_vIS=v_is,
+            ibscbsTot=ibscbs_tot,
+            vNFTot=v_nf_tot,
+        )
+
+        xml_payload = XmlPayload(
+            ide=ide,
+            produto=produto,
+            imposto=imposto,
+            totais=totais,
+        )
+
+        resp = ClassifyResponse(
+            cclastrib=cclastrib,
+            ibs=ibs,
+            cbs=cbs,
+            cst_ibs_cbs=cst_ibs_cbs,
+            cclass_trib=cclass_trib,
+            confianca=result["confianca"],
+            alertas=result.get("alertas", []),
+            pendencias=result.get("pendencias", []),
+            xml=xml_payload,
+            fundamentos_gerais=fundamentos_gerais,
+        )
+
+        self._cache.set(cache_key, resp)
+        return resp

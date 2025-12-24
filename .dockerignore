@@ -1,0 +1,59 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# =========================
+# Virtualenv / ambiente local
+# =========================
+venv/
+.env
+.env.*
+.python-version
+
+# =========================
+# Ferramentas / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Git
+# =========================
+.git/
+.gitignore
+
+# =========================
+# Testes e arquivos auxiliares
+# =========================
+test_*.py
+tests/
+pytest.ini
+.coverage
+htmlcov/
+
+# =========================
+# Docs e artefatos grandes
+# =========================
+*.pdf
+*.html
+
+# (opcional) se NÃO forem usados em runtime:
+# data/lei/
+# data/csv/
+# data/conversao/
+# data/reservas/
+# data/simples/
+
+# =========================
+# Docker
+# =========================
+Dockerfile
+docker-compose.yml

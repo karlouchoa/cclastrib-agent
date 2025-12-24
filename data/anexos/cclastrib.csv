@@ -1,0 +1,4 @@
+codigo;descricao;tipo_operacao;cfop;uf_origem;uf_destino;regime_emitente;consumidor_final;contribuinte;fundamento_legal
+VDA-SN-INT;Venda interna Simples Nacional;venda;5102;*;*;SN;*;*;LC214 art.15
+VDA-SN-INTER;Venda interestadual Simples Nacional;venda;6102;*;!;SN;*;*;LC214 art.16
+DEV-ENT;Devolução de venda entrada;devolucao_entrada;1202;*;*;*;*;*;LC214 art.18

@@ -1,0 +1,6 @@
+ncm;descricao;categoria;condicao_aplicacao;excecoes;fundamento_legal;vigencia_inicio;vigencia_fim
+31010000;Biofertilizantes;AGRO_INSUMO;Uso direto na produção agropecuária;;LC 214/2025 Anexo IX item I;2026-01-01;
+38249977;Fertilizantes;AGRO_INSUMO;Uso direto na produção agropecuária;;LC 214/2025 Anexo IX item II;2026-01-01;
+38080000;Defensivos agropecuários;AGRO_INSUMO;Uso agropecuário comprovado;Uso doméstico;LC 214/2025 Anexo IX item VI;2026-01-01;
+23099000;Rações para animais;AGRO_INSUMO;Alimentação animal produtiva;Animais domésticos;LC 214/2025 Anexo IX item XVIII;2026-01-01;
+01051000;Aves de um dia;AGRO_PRODUCAO;Produção agropecuária;Aves ornamentais;LC 214/2025 Anexo IX item XIII;2026-01-01;

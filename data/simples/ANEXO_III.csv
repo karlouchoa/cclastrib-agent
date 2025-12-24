@@ -1,0 +1,107 @@
+anexo;linha;ncm;descricao;aliquota;observacao;vigencia_inicio;vigencia_fim
+ANEXO III;1;"Receita Bruta em 12 
+			Meses (em R$)";Alíquota;Valor a Deduzir (em R$);;;
+ANEXO III;2;1ª Faixa;Até 180.000,00;6,00%;;;
+ANEXO III;3;2ª Faixa;"De 180.000,01 a 
+			360.000,00";11,20%;;;
+ANEXO III;4;3ª Faixa;"De 360.000,01 a 
+			720.000,00";13,50%;;;
+ANEXO III;5;4ª Faixa;"De 720.000,01 a 
+			1.800.000,00";16,00%;;;
+ANEXO III;6;5ª Faixa;"De 1.800.000,01 a 
+			3.600.000,00";21,00%;;;
+ANEXO III;7;6ª Faixa;"De 3.600.000,01 a 
+			4.800.000,00";32,90%;;;
+ANEXO III;8;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;9;;IRPJ;CSLL;;;
+ANEXO III;10;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;11;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;12;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;13;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;14;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;15;6ª Faixa;35,09%;15,04%;;;
+ANEXO III;16;;IRPJ;CSLL;;;
+ANEXO III;17;"5ª Faixa, com alíquota 
+			efetiva superior a 14,93%";"(Alíquota efetiva - 5%) 
+			x 6,02%";"(Alíquota efetiva - 5%) 
+			x 5,26%";;;
+ANEXO III;18;"Receita Bruta em 12 
+			Meses (em R$)";Alíquota;Valor a Deduzir (em R$);;;
+ANEXO III;19;1ª Faixa;Até 180.000,00;6,00%;;;
+ANEXO III;20;2ª Faixa;"De 180.000,01 a 
+			360.000,00";11,20%;;;
+ANEXO III;21;3ª Faixa;"De 360.000,01 a 
+			720.000,00";13,50%;;;
+ANEXO III;22;4ª Faixa;"De 720.000,01 a 
+			1.800.000,00";16,00%;;;
+ANEXO III;23;5ª Faixa;"De 1.800.000,01 a 
+			3.600.000,00";21,00%;;;
+ANEXO III;24;6ª Faixa;"De 3.600.000,01 a 
+			4.800.000,00";33,00%;;;
+ANEXO III;25;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;26;;IRPJ;CSLL;;;
+ANEXO III;27;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;28;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;29;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;30;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;31;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;32;6ª Faixa;35,00%;15,00%;;;
+ANEXO III;33;;IRPJ;CSLL;;;
+ANEXO III;34;"5ª Faixa, com alíquota 
+			efetiva superior a 14,93%";"(Alíquota efetiva - 5%) 
+			x 6,02%";"(Alíquota efetiva - 5%) 
+			x 5,26%";;;
+ANEXO III;35;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;36;;IRPJ;CSLL;;;
+ANEXO III;37;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;38;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;39;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;40;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;41;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;42;6ª Faixa;35,00%;15,00%;;;
+ANEXO III;43;;IRPJ;CSLL;;;
+ANEXO III;44;"5ª Faixa, com alíquota 
+			efetiva superior a 14,93%";"(Alíquota efetiva - 5%) 
+			x 6,02%";"(Alíquota efetiva - 5%) 
+			x 5,26%";;;
+ANEXO III;45;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;46;;IRPJ;CSLL;;;
+ANEXO III;47;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;48;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;49;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;50;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;51;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;52;6ª Faixa;35,00%;15,00%;;;
+ANEXO III;53;;IRPJ;CSLL;;;
+ANEXO III;54;"5ª Faixa, com alíquota 
+			efetiva superior a 14,93%";"(Alíquota efetiva - 5%) 
+			x 6,02%";"(Alíquota efetiva - 5%) 
+			x 5,26%";;;
+ANEXO III;55;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;56;;IRPJ;CSLL;;;
+ANEXO III;57;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;58;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;59;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;60;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;61;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;62;6ª Faixa;35,00%;15,00%;;;
+ANEXO III;63;;IRPJ;CSLL;;;
+ANEXO III;64;"5ª Faixa, com alíquota 
+			efetiva superior a 14,93%";"(Alíquota efetiva - 5%) 
+			x 6,02%";"(Alíquota efetiva - 5%) 
+			x 5,26%";;;
+ANEXO III;65;;;;;;
+ANEXO III;66;Faixas;"Percentual de Repartição 
+			dos Tributos";;;;
+ANEXO III;67;;IRPJ;CSLL;;;
+ANEXO III;68;1ª Faixa;4,00%;3,50%;;;
+ANEXO III;69;2ª Faixa;4,00%;3,50%;;;
+ANEXO III;70;3ª Faixa;4,00%;3,50%;;;
+ANEXO III;71;4ª Faixa;4,00%;3,50%;;;
+ANEXO III;72;5ª Faixa;4,00%;3,50%;;;
+ANEXO III;73;6ª Faixa;35,00%;15,00%;;;

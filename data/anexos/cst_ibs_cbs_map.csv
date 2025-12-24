@@ -1,0 +1,7 @@
+cclastrib_codigo;cst_ibs_cbs;cclass_trib;descricao;fundamento_legal
+VDA-SN-INTER;000;000001;Tributação integral - padrão;LC 214/2025 art. 12
+VDA-SN-INTRA;000;000001;Tributação integral - padrão;LC 214/2025 art. 12
+VDA-SN-ISENTA;400;400001;Isenção - padrão;LC 214/2025 art. 8º
+IMUNE;410;410001;Imunidade / Não incidência;CF art. 150, VI
+SUSPENSAO;550;550001;Suspensão;LC 214/2025 art. 14
+DIFERIMENTO;510;510001;Diferimento;LC 214/2025 art. 15
