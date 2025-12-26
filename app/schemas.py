@@ -324,3 +324,34 @@ class ClassifyResponse(BaseModel):
     pendencias: List[str]
     xml: XmlPayload
     fundamentos_gerais: List[FundamentoItem]
+
+class ClassifyLoteItem(BaseModel):
+    ncm: str
+    valor_item: Optional[float] = None
+    quantidade: Optional[float] = 1   
+
+class ClassifyLoteRequest(BaseModel):
+    ano_emissao: int
+
+    regime_fiscal_emitente: str
+    cfop: str
+    uf_emitente: str
+    uf_destinatario: str
+    cst_icms: str
+
+    cod_municipio_fg_ibs: Optional[int] = None
+    compra_governo: bool = False
+    ind_doacao: bool = False
+    refs_pag_antecipado: List[str] = Field(default_factory=list)
+
+    itens: List[ClassifyLoteItem]
+
+class ClassifyLoteItemResponse(BaseModel):
+    ncm: str
+    resultado: ClassifyResponse
+
+class ClassifyLoteResponse(BaseModel):
+    ano_emissao: int
+    itens: List[ClassifyLoteItemResponse]
+
+

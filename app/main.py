@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from .schemas import ClassifyRequest, ClassifyResponse
+from .schemas import ClassifyRequest, ClassifyResponse, ClassifyLoteResponse, ClassifyLoteRequest
 from .agent import CClastribAgent
 
 APP_NAME = "cclastrib-agent"
@@ -32,7 +32,10 @@ def classificar(req: ClassifyRequest):
         return agent.handle(req)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
+@app.post("/classificar-lote", response_model=ClassifyLoteResponse)
+def classificar_lote(req: ClassifyLoteRequest):
+    return agent.handle_lote(req)
 
 @app.post("/reload")
 def reload_sources():

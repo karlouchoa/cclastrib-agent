@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
+from .schemas import ClassifyLoteRequest, ClassifyLoteResponse, ClassifyLoteItemResponse
 
 from .schemas import (
     ClassifyRequest,
@@ -262,3 +263,37 @@ class CClastribAgent:
 
         self._cache.set(cache_key, resp)
         return resp
+    
+
+    def handle_lote(self, req: ClassifyLoteRequest) -> ClassifyLoteResponse:
+        resultados = []
+
+        for item in req.itens:
+            req_item = ClassifyRequest(
+                ano_emissao=req.ano_emissao,
+                regime_fiscal_emitente=req.regime_fiscal_emitente,
+                cfop=req.cfop,
+                uf_emitente=req.uf_emitente,
+                uf_destinatario=req.uf_destinatario,
+                cst_icms=req.cst_icms,
+                cod_municipio_fg_ibs=req.cod_municipio_fg_ibs,
+                compra_governo=req.compra_governo,
+                ind_doacao=req.ind_doacao,
+                refs_pag_antecipado=req.refs_pag_antecipado,
+                ncm=item.ncm,
+                valor_item=item.valor_item,
+            )
+
+            resultado = self.handle(req_item)
+
+            resultados.append(
+                ClassifyLoteItemResponse(
+                    ncm=item.ncm,
+                    resultado=resultado
+                )
+            )
+
+        return ClassifyLoteResponse(
+            ano_emissao=req.ano_emissao,
+            itens=resultados
+        )
