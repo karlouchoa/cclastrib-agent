@@ -1,4 +1,7 @@
-codigo;descricao;tipo_operacao;cfop;uf_origem;uf_destino;regime_emitente;consumidor_final;contribuinte;fundamento_legal
-VDA-SN-INT;Venda interna Simples Nacional;venda;5102;*;*;SN;*;*;LC214 art.15
-VDA-SN-INTER;Venda interestadual Simples Nacional;venda;6102;*;!;SN;*;*;LC214 art.16
-DEV-ENT;Devolução de venda entrada;devolucao_entrada;1202;*;*;*;*;*;LC214 art.18
+codigo;descricao;tipo_operacao;cfop;uf_origem;uf_destino;regime_emitente;cst_origem;fundamento_legal
+VDA-CESTA-NAC;Venda Cesta Básica Nacional (Alíquota Zero);venda;5102;*;*;*;*;LC214/25 Art. 28
+VDA-PADRAO-NORMAL;Venda de mercadoria regime regular;venda;5102;*;*;REGIME_NORMAL;000;LC214/25 Art. 10
+VDA-ST-NORMAL;Venda mercadoria com substituição (Anterior);venda;5405;*;*;REGIME_NORMAL;040;LC214/25 Art. 150
+VDA-ST-CONSUMO;Venda mercadoria com substituição (Anterior);venda;5405;*;*;REGIME_NORMAL;060;LC214/25 Art. 150
+VDA-INTER-NORMAL;Venda interestadual regular;venda;6102;*;!;REGIME_NORMAL;*;LC214/25 Art. 10
+VDA-SN;Venda optante pelo Simples Nacional;venda;*;*;*;REGIME_SIMPLES;*;LC214/25 Art. 15

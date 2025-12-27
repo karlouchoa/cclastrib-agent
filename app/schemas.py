@@ -23,6 +23,7 @@ class ClassifyRequest(BaseModel):
     cod_municipio_fg_ibs: Optional[int] = Field(None, description="cMunFGIBS (do emitente)")
     compra_governo: Optional[bool] = Field(False, description="Se a operação é compra governamental")
     ind_doacao: Optional[bool] = Field(False, description="Se é doação")
+    produzido_zfm: Optional[str] = Field("N", description="S se produzido na Zona Franca de Manaus")
     refs_pag_antecipado: Optional[List[str]] = Field(default_factory=list, description="Lista de chaves refNFe de pagamento antecipado")
     dfe_referenciado_chave: Optional[str] = Field("", description="Chave de DF-e referenciado no item")
     dfe_referenciado_nitem: Optional[int] = Field(1, description="nItem do DF-e referenciado")
@@ -328,17 +329,17 @@ class ClassifyResponse(BaseModel):
 class ClassifyLoteItem(BaseModel):
     ncm: str
     valor_item: Optional[float] = None
-    quantidade: Optional[float] = 1   
+    quantidade: Optional[float] = 1
+    cst_icms: str
+    cfop: str
+    produzido_zfm: str   
 
 class ClassifyLoteRequest(BaseModel):
     ano_emissao: int
 
     regime_fiscal_emitente: str
-    cfop: str
     uf_emitente: str
     uf_destinatario: str
-    cst_icms: str
-
     cod_municipio_fg_ibs: Optional[int] = None
     compra_governo: bool = False
     ind_doacao: bool = False

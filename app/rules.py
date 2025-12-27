@@ -4,7 +4,7 @@ import csv
 import os
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, Any, List, Optional, Tuple
 
 
@@ -35,6 +35,17 @@ def parse_float_ptbr(value: Any) -> Optional[float]:
     except Exception:
         return None
 
+def parse_date_br(value: Any) -> Optional[date]:
+    if not value:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%d/%m/%Y").date()
+    except Exception:
+        return None
+
 
 def today_if_none(d: Optional[date]) -> date:
     return d if d else date.today()
@@ -46,15 +57,26 @@ def today_if_none(d: Optional[date]) -> date:
 def read_csv_semicolon(path: str) -> List[Dict[str, str]]:
     if not os.path.exists(path):
         return []
-    with open(path, "r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f, delimiter=";")
-        rows = []
-        for r in reader:
-            rows.append({
-                k.strip().replace("\ufeff", ""): (v.strip() if isinstance(v, str) else v)
-                for k, v in r.items()
-            })
-        return rows
+    encodings = ["utf-8-sig", "cp1252"]
+    last_error = None
+    for enc in encodings:
+        try:
+            with open(path, "r", encoding=enc, newline="") as f:
+                reader = csv.DictReader(f, delimiter=";")
+                rows = []
+                for r in reader:
+                    rows.append({
+                        k.strip().replace("\ufeff", ""): (v.strip() if isinstance(v, str) else v)
+                        for k, v in r.items()
+                    })
+                return rows
+        except UnicodeDecodeError as e:
+            last_error = e
+            continue
+    # If all decodes fail, raise the last error for visibility
+    if last_error:
+        raise last_error
+    return []
 
 
 # -------------------------
@@ -65,6 +87,7 @@ class DataSources:
     base_dir: str
     ncm_master: List[Dict[str, str]]
     ncm_excecoes: List[Dict[str, str]]
+    ncm_oficial: List[Dict[str, str]]
     ibs_aliquotas: List[Dict[str, str]]
     cbs_aliquotas: List[Dict[str, str]]
     transicao_ibs: List[Dict[str, str]]
@@ -90,6 +113,7 @@ def load_sources(data_anexos_dir: str) -> DataSources:
         base_dir=data_anexos_dir,
         ncm_master=read_csv_semicolon(p("ncm_master.csv")),
         ncm_excecoes=read_csv_semicolon(p("ncm_excecoes.csv")),
+        ncm_oficial=read_csv_semicolon(p("Tabela_NCM_Vigente_20251227.csv")),
         ibs_aliquotas=read_csv_semicolon(p("ibs_aliquotas.csv")),
         cbs_aliquotas=read_csv_semicolon(p("cbs_aliquotas.csv")),
         transicao_ibs=read_csv_semicolon(p("transicao_ibs.csv")),
@@ -180,6 +204,46 @@ def find_excecao(
     return None
 
 
+def find_in_oficial(
+    sources: DataSources,
+    ncm_digits: str,
+    data_emissao: date,
+) -> Optional[Dict[str, str]]:
+    """
+    Busca na tabela oficial de NCM (vigente) para obter descrição/vigência.
+    Não atribui categoria, apenas auxilia na confirmação do código.
+    """
+    def pick(r: Dict[str, str], keys: List[str]) -> Optional[str]:
+        for k in keys:
+            if k in r:
+                return r.get(k)
+        return None
+
+    for r in sources.ncm_oficial:
+        raw = pick(r, ["Código", "Codigo", "CÓDIGO", "CODIGO", "Cód.", "C¢digo"])
+        if not raw:
+            continue
+
+        if norm_ncm(raw)[:8] != ncm_digits[:8]:
+            continue
+
+        ini = parse_date_br(
+            pick(r, ["Data Início", "Data Inicio", "Data In¡cio", "Data Inicio ", "DATA INICIO", "Data Início "])
+        )
+        fim = parse_date_br(
+            pick(r, ["Data Fim", "DATA FIM", "Data Fim "])
+        )
+
+        if ini and data_emissao < ini:
+            continue
+        if fim and data_emissao > fim:
+            continue
+
+        return r
+
+    return None
+
+
 def year_factor_transicao(
     rows: List[Dict[str, str]],
     year: int,
@@ -239,7 +303,7 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
     """
     cclastrib.csv deve ser sua tabela de "classificação" operacional.
     Esperamos colunas aproximadas:
-      codigo;descricao;regime;cfop;uf_emitente;uf_destinatario;cst_icms;...
+      codigo;descricao;regime_emitente;cfop;uf_origem;uf_destino;cst_icms;...
     Você pode ir enriquecendo depois.
     """
     regime = norm_code(regime)
@@ -250,23 +314,28 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
 
     candidatos = []
     for r in sources.cclastrib:
-        r_reg = norm_code(r.get("regime") or r.get("regime_fiscal") or "")
+        r_reg = norm_code(r.get("regime_emitente") or r.get("regime") or r.get("regime_fiscal") or "")
         r_cfop = norm_code(r.get("cfop") or "")
-        r_ufe = norm_code(r.get("uf_emitente") or "")
-        r_ufd = norm_code(r.get("uf_destinatario") or "")
+        r_ufe = norm_code(r.get("uf_origem") or r.get("uf_emitente") or "")
+        r_ufd = norm_code(r.get("uf_destino") or r.get("uf_destinatario") or "")
         r_cst = norm_code(r.get("cst_icms") or "")
 
         # match flexível: se a célula vier vazia, vira "coringa"
         ok = True
-        if r_reg and r_reg != regime:
+        if r_reg and r_reg != "*" and r_reg != regime:
             ok = False
-        if r_cfop and r_cfop != cfop:
+        if r_cfop and r_cfop != "*" and r_cfop != cfop:
             ok = False
-        if r_ufe and r_ufe != uf_e:
+        if r_ufe and r_ufe != "*" and r_ufe != uf_e:
             ok = False
-        if r_ufd and r_ufd != uf_d:
-            ok = False
-        if r_cst and r_cst != cst_icms:
+        if r_ufd:
+            if r_ufd == "!":
+                # "!" significa UF de destino diferente da UF de origem
+                if uf_d == uf_e:
+                    ok = False
+            elif r_ufd != "*" and r_ufd != uf_d:
+                ok = False
+        if r_cst and r_cst != "*" and r_cst != cst_icms:
             ok = False
 
         if ok:
@@ -274,8 +343,18 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
 
     # prioriza o mais "específico" (mais campos preenchidos)
     def score(r: Dict[str, str]) -> int:
-        keys = ["regime", "regime_fiscal", "cfop", "uf_emitente", "uf_destinatario", "cst_icms"]
-        return sum(1 for k in keys if (r.get(k) or "").strip())
+        keys = [
+            "regime_emitente",
+            "regime",
+            "regime_fiscal",
+            "cfop",
+            "uf_origem",
+            "uf_emitente",
+            "uf_destino",
+            "uf_destinatario",
+            "cst_icms",
+        ]
+        return sum(1 for k in keys if (r.get(k) or "").strip() and (r.get(k) or "").strip() != "*")
 
     candidatos.sort(key=score, reverse=True)
 
@@ -389,6 +468,7 @@ def classify(
     data_emissao: date,
     compra_gov: bool,
     ind_doacao: bool,
+    produzido_zfm: bool,
 ) -> Dict[str, Any]:
 
     fundamentos_gerais: List[Dict[str, str]] = []
@@ -414,11 +494,11 @@ def classify(
     if not found:
         print("⚠️ NENHUM MATCH ENCONTRADO NO NCM_MASTER")
 
-    #row = find_excecao(sources, ncm_digits) or find_in_master(sources, ncm_digits)
     row = (
-    find_excecao(sources, ncm_digits, data_emissao)
-    or find_in_master(sources, ncm_digits, data_emissao)
-)
+        find_excecao(sources, ncm_digits, data_emissao)
+        or find_in_master(sources, ncm_digits, data_emissao)
+    )
+    row_oficial = None if row else find_in_oficial(sources, ncm_digits, data_emissao)
 
     categoria = None
     if row:
@@ -431,9 +511,29 @@ def classify(
                 "motivo": f"Categoria={categoria}",
                 "fonte": "ncm_master.csv / ncm_excecoes.csv"
             })
+    elif row_oficial:
+        desc = (
+            row_oficial.get("Descrição")
+            or row_oficial.get("Descriçao")
+            or row_oficial.get("DescriÇao")
+            or row_oficial.get("Descri‡Æo")
+            or row_oficial.get("Descrição ")
+            or ""
+        )
+        fundamentos_gerais.append({
+            "regra": "NCM OFICIAL (vigência confirmada)",
+            "motivo": f"NCM encontrado em Tabela_NCM_Vigente_20251227.csv. Descrição: {desc or 'não informada'}",
+            "fonte": "Tabela_NCM_Vigente_20251227.csv"
+        })
+        pendencias.append(
+            f"NCM {ncm_digits} encontrado na tabela oficial, mas sem categoria interna; aplicada regra geral."
+        )
+        alertas.append(
+            "Tributação aplicada pela regra geral (fallback)"
+        )
     else:
         pendencias.append(
-            f"NCM {ncm_digits} não encontrado em ncm_master/ncm_excecoes"
+            f"NCM {ncm_digits} não encontrado em ncm_master/ncm_excecoes nem na tabela oficial"
         )
         alertas.append(
             "Tributação aplicada pela regra geral (fallback)"
@@ -480,6 +580,15 @@ def classify(
 
     aliq_ibs = calc["aliquota_ibs"]
     aliq_cbs = calc["aliquota_cbs"]
+
+    if produzido_zfm:
+        aliq_ibs = apply_reducao(aliq_ibs, 100.0)
+        aliq_cbs = apply_reducao(aliq_cbs, 100.0)
+        fundamentos_gerais.append({
+            "regra": "LC 214/2025 (Capítulo ZFM, arts. 439-446)",
+            "motivo": "Item declarado como produzido na Zona Franca de Manaus: aplicado benefício fiscal para manter o diferencial competitivo (alíquota zero).",
+            "fonte": "lc214_2025.html / entrada da API (produzido_zfm=S)"
+        })
 
     # -------------------------
     # Flags especiais
@@ -528,5 +637,6 @@ def classify(
             "compra_gov": compra_gov,
             "ind_doacao": ind_doacao,
             "aplicar_is": aplicar_is,
+            "produzido_zfm": produzido_zfm,
         },
     }

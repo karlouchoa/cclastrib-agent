@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Código da aplicação
 COPY app ./app
-COPY .env .
+#COPY .env .
 
 # Inicialização
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

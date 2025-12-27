@@ -53,6 +53,12 @@ class CClastribAgent:
             data_emissao = date.today()
 
         ncm_digits = norm_ncm(req.ncm)
+        produzido_zfm = (req.produzido_zfm or "").strip().upper() == "S"
+
+        def round_money(v):
+            if v is None:
+                return None
+            return round(float(v), 2)
 
         cache_key = make_cache_key(
             req.regime_fiscal_emitente,
@@ -64,6 +70,7 @@ class CClastribAgent:
             data_emissao.isoformat(),
             "GOV" if req.compra_governo else "NOGOV",
             "DOA" if req.ind_doacao else "NODOA",
+            "ZFM" if produzido_zfm else "NOZFM",
         )
 
         cached = self._cache.get(cache_key)
@@ -81,6 +88,7 @@ class CClastribAgent:
             data_emissao=data_emissao,
             compra_gov=bool(req.compra_governo),
             ind_doacao=bool(req.ind_doacao),
+            produzido_zfm=produzido_zfm,
         )
 
         # -------------------------
@@ -150,7 +158,7 @@ class CClastribAgent:
 
         produto = ProdutoTags(
             indBemMovelUsado="tieNenhum",
-            vItem=req.valor_item,
+            vItem=round_money(req.valor_item),
             DFeReferenciado=dfe_ref,
         )
 
@@ -162,11 +170,14 @@ class CClastribAgent:
 
         # Base de cálculo e valores (se valor_item vier)
         vbc = float(req.valor_item) if req.valor_item is not None else None
+        vbc = round_money(vbc)
         p_ibs = float(result["ibs"]["aliquota"]) * 100.0 if result["ibs"]["aliquota"] is not None else None
         p_cbs = float(result["cbs"]["aliquota"]) * 100.0 if result["cbs"]["aliquota"] is not None else None
 
         v_ibs = (vbc * (p_ibs / 100.0)) if (vbc is not None and p_ibs is not None) else None
         v_cbs = (vbc * (p_cbs / 100.0)) if (vbc is not None and p_cbs is not None) else None
+        v_ibs = round_money(v_ibs)
+        v_cbs = round_money(v_cbs)
 
         g_ibscbs = GIBSCBS(
             vBC=vbc,
@@ -224,6 +235,9 @@ class CClastribAgent:
             gEstornoCred=TotaisEstorno(),
         )
 
+        if isel:
+            isel.vBCIS = round_money(isel.vBCIS)
+            isel.vIS = round_money(isel.vIS)
         v_is = isel.vIS if isel else None
         v_nf_tot = None
         if vbc is not None:
@@ -234,6 +248,7 @@ class CClastribAgent:
                 v_nf_tot += v_cbs
             if v_is is not None:
                 v_nf_tot += v_is
+            v_nf_tot = round_money(v_nf_tot)
 
         totais = TotaisTags(
             isTot_vIS=v_is,
@@ -269,16 +284,18 @@ class CClastribAgent:
         resultados = []
 
         for item in req.itens:
+            # Each item can have its own CFOP/CST, so use the item fields
             req_item = ClassifyRequest(
                 ano_emissao=req.ano_emissao,
                 regime_fiscal_emitente=req.regime_fiscal_emitente,
-                cfop=req.cfop,
+                cfop=item.cfop,
                 uf_emitente=req.uf_emitente,
                 uf_destinatario=req.uf_destinatario,
-                cst_icms=req.cst_icms,
+                cst_icms=item.cst_icms,
                 cod_municipio_fg_ibs=req.cod_municipio_fg_ibs,
                 compra_governo=req.compra_governo,
                 ind_doacao=req.ind_doacao,
+                produzido_zfm=item.produzido_zfm,
                 refs_pag_antecipado=req.refs_pag_antecipado,
                 ncm=item.ncm,
                 valor_item=item.valor_item,
