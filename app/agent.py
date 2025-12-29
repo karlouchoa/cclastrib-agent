@@ -54,6 +54,21 @@ class CClastribAgent:
 
         ncm_digits = norm_ncm(req.ncm)
         produzido_zfm = (req.produzido_zfm or "").strip().upper() == "S"
+        emitente_zfm = (req.emitente_zona_franca_manaus or "").strip().upper() == "S"
+        destinatario_zfm = (req.destinatario_zona_franca_manaus or "").strip().upper() == "S"
+
+        cadastro_suframa_emitente = (req.cadastro_suframa_emitente or "").strip()
+        cadastro_suframa_destinatario = (req.cadastro_suframa_destinatario or "").strip()
+
+        def parse_sn(value: Optional[str]) -> Optional[bool]:
+            if value is None:
+                return None
+            if isinstance(value, bool):
+                return value
+            return str(value).strip().upper() == "S"
+
+        cadastro_suframa_emitente_ativo = parse_sn(req.cadastro_suframa_emitente_ativo)
+        cadastro_suframa_destinatario_ativo = parse_sn(req.cadastro_suframa_destinatario_ativo)
 
         def round_money(v):
             if v is None:
@@ -71,6 +86,10 @@ class CClastribAgent:
             "GOV" if req.compra_governo else "NOGOV",
             "DOA" if req.ind_doacao else "NODOA",
             "ZFM" if produzido_zfm else "NOZFM",
+            "EZFM" if emitente_zfm else "NOEZFM",
+            "DZFM" if destinatario_zfm else "NODZFM",
+            f"SUFE_{'P' if cadastro_suframa_emitente else 'NP'}_{'AT' if cadastro_suframa_emitente_ativo else 'IN' if cadastro_suframa_emitente_ativo is False else 'NA'}",
+            f"SUFD_{'P' if cadastro_suframa_destinatario else 'NP'}_{'AT' if cadastro_suframa_destinatario_ativo else 'IN' if cadastro_suframa_destinatario_ativo is False else 'NA'}",
         )
 
         cached = self._cache.get(cache_key)
@@ -89,6 +108,13 @@ class CClastribAgent:
             compra_gov=bool(req.compra_governo),
             ind_doacao=bool(req.ind_doacao),
             produzido_zfm=produzido_zfm,
+            emitente_zfm=emitente_zfm,
+            destinatario_zfm=destinatario_zfm,
+            cadastro_suframa_emitente=cadastro_suframa_emitente,
+            cadastro_suframa_emitente_ativo=cadastro_suframa_emitente_ativo,
+            cadastro_suframa_destinatario=cadastro_suframa_destinatario,
+            cadastro_suframa_destinatario_ativo=cadastro_suframa_destinatario_ativo,
+            cod_municipio_destinatario=req.cod_municipio_destinatario,
         )
 
         # -------------------------
@@ -135,10 +161,13 @@ class CClastribAgent:
         # -------------------------
         # Monta payload "XML"
         # -------------------------
+        beneficio_zfm_ibs_zero = bool(result.get("beneficio_zfm_ibs_zero"))
+        tp_nf_debito = "tdNenhum" if beneficio_zfm_ibs_zero else "tdIntegral"
+
         ide = IdeTags(
             dPrevEntrega=(data_emissao + timedelta(days=10)).isoformat(),
             cMunFGIBS=req.cod_municipio_fg_ibs,
-            tpNFDebito="tdNenhum",
+            tpNFDebito=tp_nf_debito,
             tpNFCredito="tcNenhum",
             gCompraGov=(
                 IdeCompraGov(tpEnteGov="tcgEstados", pRedutor=5, tpOperGov="togFornecimento")
@@ -178,6 +207,12 @@ class CClastribAgent:
         v_cbs = (vbc * (p_cbs / 100.0)) if (vbc is not None and p_cbs is not None) else None
         v_ibs = round_money(v_ibs)
         v_cbs = round_money(v_cbs)
+
+        total_debito = sum(
+            v for v in [v_ibs, v_cbs]
+            if v is not None
+        ) if (v_ibs is not None or v_cbs is not None) else 0.0
+        total_credito = 0.0
 
         g_ibscbs = GIBSCBS(
             vBC=vbc,
@@ -256,8 +291,19 @@ class CClastribAgent:
             vNFTot=v_nf_tot,
         )
 
+        beneficio_zfm_ibs_zero = bool(result.get("beneficio_zfm_ibs_zero"))
+        tp_nf_debito = "tdNenhum" if not total_debito or beneficio_zfm_ibs_zero else "tdIntegral"
+        tp_nf_credito = "tcNenhum" if not total_credito else "tcIntegral"
+
         xml_payload = XmlPayload(
-            ide=ide,
+            ide=IdeTags(
+                dPrevEntrega=ide.dPrevEntrega,
+                cMunFGIBS=ide.cMunFGIBS,
+                tpNFDebito=tp_nf_debito,
+                tpNFCredito=tp_nf_credito,
+                gCompraGov=ide.gCompraGov,
+                gPagAntecipado=ide.gPagAntecipado,
+            ),
             produto=produto,
             imposto=imposto,
             totais=totais,
@@ -269,6 +315,18 @@ class CClastribAgent:
             cbs=cbs,
             cst_ibs_cbs=cst_ibs_cbs,
             cclass_trib=cclass_trib,
+            cfop_venda_industrializado=result.get("cfop_venda_industrializado"),
+            emitente_zfm=result.get("emitente_zfm"),
+            destinatario_zfm=result.get("destinatario_zfm"),
+            cadastro_suframa_emitente=result.get("cadastro_suframa_emitente"),
+            cadastro_suframa_emitente_ativo=result.get("cadastro_suframa_emitente_ativo"),
+            cadastro_suframa_destinatario=result.get("cadastro_suframa_destinatario"),
+            cadastro_suframa_destinatario_ativo=result.get("cadastro_suframa_destinatario_ativo"),
+            produzido_emitente=result.get("produzido_emitente"),
+            beneficio_zfm_ibs_zero=result.get("beneficio_zfm_ibs_zero"),
+            ncm_beneficiado_zfm=result.get("ncm_beneficiado_zfm"),
+            total_debito=total_debito,
+            total_credito=total_credito,
             confianca=result["confianca"],
             alertas=result.get("alertas", []),
             pendencias=result.get("pendencias", []),
@@ -293,6 +351,13 @@ class CClastribAgent:
                 uf_destinatario=req.uf_destinatario,
                 cst_icms=item.cst_icms,
                 cod_municipio_fg_ibs=req.cod_municipio_fg_ibs,
+                cod_municipio_destinatario=req.cod_municipio_destinatario,
+                emitente_zona_franca_manaus=req.emitente_zona_franca_manaus,
+                destinatario_zona_franca_manaus=req.destinatario_zona_franca_manaus,
+                cadastro_suframa_emitente=req.cadastro_suframa_emitente,
+                cadastro_suframa_emitente_ativo=req.cadastro_suframa_emitente_ativo,
+                cadastro_suframa_destinatario=req.cadastro_suframa_destinatario,
+                cadastro_suframa_destinatario_ativo=req.cadastro_suframa_destinatario_ativo,
                 compra_governo=req.compra_governo,
                 ind_doacao=req.ind_doacao,
                 produzido_zfm=item.produzido_zfm,

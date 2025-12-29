@@ -21,9 +21,16 @@ class ClassifyRequest(BaseModel):
     valor_item: Optional[float] = Field(None, description="vItem, se você quiser cálculo de valores")
     data_emissao: Optional[date] = Field(None, description="Se não vier, usa hoje")
     cod_municipio_fg_ibs: Optional[int] = Field(None, description="cMunFGIBS (do emitente)")
+    cod_municipio_destinatario: Optional[int] = Field(None, description="Código IBGE do município do destinatário")
     compra_governo: Optional[bool] = Field(False, description="Se a operação é compra governamental")
     ind_doacao: Optional[bool] = Field(False, description="Se é doação")
     produzido_zfm: Optional[str] = Field("N", description="S se produzido na Zona Franca de Manaus")
+    emitente_zona_franca_manaus: Optional[str] = Field("N", description="S se emitente está em área de ZFM/ALC")
+    destinatario_zona_franca_manaus: Optional[str] = Field("N", description="S se destinatário está em área de ZFM/ALC")
+    cadastro_suframa_emitente: Optional[str] = Field("", description="Número SUFRAMA do emitente")
+    cadastro_suframa_emitente_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do emitente está ativo")
+    cadastro_suframa_destinatario: Optional[str] = Field("", description="Número SUFRAMA do destinatário")
+    cadastro_suframa_destinatario_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do destinatário está ativo")
     refs_pag_antecipado: Optional[List[str]] = Field(default_factory=list, description="Lista de chaves refNFe de pagamento antecipado")
     dfe_referenciado_chave: Optional[str] = Field("", description="Chave de DF-e referenciado no item")
     dfe_referenciado_nitem: Optional[int] = Field(1, description="nItem do DF-e referenciado")
@@ -319,6 +326,18 @@ class ClassifyResponse(BaseModel):
     cbs: BlocoResultado
     cst_ibs_cbs: str          # ex: "000"
     cclass_trib: str          # ex: "000001"
+    produzido_emitente: Optional[bool] = None
+    cfop_venda_industrializado: Optional[bool] = None
+    emitente_zfm: Optional[bool] = None
+    destinatario_zfm: Optional[bool] = None
+    cadastro_suframa_emitente: Optional[str] = None
+    cadastro_suframa_emitente_ativo: Optional[bool] = None
+    cadastro_suframa_destinatario: Optional[str] = None
+    cadastro_suframa_destinatario_ativo: Optional[bool] = None
+    beneficio_zfm_ibs_zero: Optional[bool] = None
+    ncm_beneficiado_zfm: Optional[bool] = None
+    total_debito: Optional[float] = None
+    total_credito: Optional[float] = None
 
     confianca: float
     alertas: List[str]
@@ -341,9 +360,16 @@ class ClassifyLoteRequest(BaseModel):
     uf_emitente: str
     uf_destinatario: str
     cod_municipio_fg_ibs: Optional[int] = None
+    cod_municipio_destinatario: Optional[int] = None
     compra_governo: bool = False
     ind_doacao: bool = False
     refs_pag_antecipado: List[str] = Field(default_factory=list)
+    emitente_zona_franca_manaus: Optional[str] = Field("N")
+    destinatario_zona_franca_manaus: Optional[str] = Field("N")
+    cadastro_suframa_emitente: Optional[str] = Field("", description="Número SUFRAMA do emitente")
+    cadastro_suframa_emitente_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do emitente está ativo")
+    cadastro_suframa_destinatario: Optional[str] = Field("", description="Número SUFRAMA do destinatário")
+    cadastro_suframa_destinatario_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do destinatário está ativo")
 
     itens: List[ClassifyLoteItem]
 

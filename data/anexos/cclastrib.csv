@@ -1,7 +1,24 @@
-codigo;descricao;tipo_operacao;cfop;uf_origem;uf_destino;regime_emitente;cst_origem;fundamento_legal
-VDA-CESTA-NAC;Venda Cesta Básica Nacional (Alíquota Zero);venda;5102;*;*;*;*;LC214/25 Art. 28
-VDA-PADRAO-NORMAL;Venda de mercadoria regime regular;venda;5102;*;*;REGIME_NORMAL;000;LC214/25 Art. 10
-VDA-ST-NORMAL;Venda mercadoria com substituição (Anterior);venda;5405;*;*;REGIME_NORMAL;040;LC214/25 Art. 150
-VDA-ST-CONSUMO;Venda mercadoria com substituição (Anterior);venda;5405;*;*;REGIME_NORMAL;060;LC214/25 Art. 150
-VDA-INTER-NORMAL;Venda interestadual regular;venda;6102;*;!;REGIME_NORMAL;*;LC214/25 Art. 10
-VDA-SN;Venda optante pelo Simples Nacional;venda;*;*;*;REGIME_SIMPLES;*;LC214/25 Art. 15
+codigo;descricao;tipo_operacao;cfop;uf_origem;uf_destino;regime_emitente;cst_origem;fundamento_legal;aplica_zfm
+020003;ZFM - Produção própria com benefício fiscal (LC 214/2025);venda;*;*;*;*;*;LC214/2025 - Capítulo ZFM;S
+VDA-PROPRIA-INTRA;Venda de produção do estabelecimento (interna);venda;5101;*;*;*;*;LC214/2025 regras gerais + CFOP 5101;
+VDA-PROPRIA-INTER;Venda de produção do estabelecimento (interestadual);venda;6101;*;!;*;*;LC214/2025 regras gerais + CFOP 6101;
+VDA-CESTA-NAC;Venda cesta basica nacional (aliquota zero);venda;5102;*;*;*;*;LC214/2025 art.28 + CFOP 5102;
+VDA-PADRAO-NORMAL;Venda interna mercadoria regime normal;venda;5102;*;*;REGIME_NORMAL;*;LC214/2025 regras gerais + CFOP 5102;
+VDA-PADRAO-INTER;Venda interestadual mercadoria regime normal;venda;6102;*;!;REGIME_NORMAL;*;LC214/2025 regras gerais + CFOP 6102;
+VDA-SIMPLES;Venda mercadoria optante Simples Nacional;venda;*;*;*;REGIME_SIMPLES;*;LC214/2025 art.15 + regime Simples;
+VDA-ST-ANTEC;Venda com substituicao tributaria anterior;venda;5405;*;*;REGIME_NORMAL;*;LC214/2025 art.150 + CFOP 5405;
+VDA-ST-ANTEC-INTER;Venda interestadual com substituicao tributaria anterior;venda;6405;*;!;REGIME_NORMAL;*;LC214/2025 art.150 + CFOP 6405;
+DEV-VENDA-ENTRADA;Devolucao de venda (entrada do cliente);devolucao;1202;*;*;*;*;LC214/2025 devolucao/estorno + CFOP 1202;
+DEV-VENDA-ENTRADA-INTER;Devolucao de venda interestadual (entrada);devolucao;2202;*;!;*;*;LC214/2025 devolucao/estorno + CFOP 2202;
+DEV-COMPRA-SAIDA;Devolucao de compra ao fornecedor;devolucao;5202;*;*;*;*;LC214/2025 devolucao/estorno + CFOP 5202;
+DEV-COMPRA-SAIDA-INTER;Devolucao de compra interestadual ao fornecedor;devolucao;6202;*;!;*;*;LC214/2025 devolucao/estorno + CFOP 6202;
+TRANSF-ESTOQUE-INTRA;Transferencia de estoque entre filiais (interna);transferencia;5152;*;*;*;*;LC214/2025 circulacao nao onerosa + CFOP 5152;
+TRANSF-ESTOQUE-INTER;Transferencia de estoque entre filiais (interestadual);transferencia;6152;*;!;*;*;LC214/2025 circulacao nao onerosa + CFOP 6152;
+REM-BONUS-INTRA;Remessa por bonificacao/doacao sem cobranca;remessa;5910;*;*;*;*;LC214/2025 remessa sem preco + CFOP 5910;
+REM-BONUS-INTER;Remessa por bonificacao/doacao interestadual;remessa;6910;*;!;*;*;LC214/2025 remessa sem preco + CFOP 6910;
+REM-DEMO-INTRA;Remessa para demonstracao/mostruario;remessa;5911;*;*;*;*;LC214/2025 remessa para demonstracao + CFOP 5911;
+REM-DEMO-INTER;Remessa para demonstracao/mostruario interestadual;remessa;6911;*;!;*;*;LC214/2025 remessa para demonstracao + CFOP 6911;
+REM-IND-INTRA;Remessa para industrializacao por encomenda;industrializacao;5901;*;*;*;*;LC214/2025 industrializacao por encomenda + CFOP 5901;
+REM-IND-INTER;Remessa para industrializacao por encomenda interestadual;industrializacao;6901;*;!;*;*;LC214/2025 industrializacao por encomenda + CFOP 6901;
+RET-IND-INTRA;Retorno de industrializacao por encomenda;industrializacao;5902;*;*;*;*;LC214/2025 retorno industrializacao + CFOP 5902;
+RET-IND-INTER;Retorno de industrializacao por encomenda interestadual;industrializacao;6902;*;!;*;*;LC214/2025 retorno industrializacao + CFOP 6902;

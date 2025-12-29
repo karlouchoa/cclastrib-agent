@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Dict, Any, List, Optional, Tuple
+import unicodedata
 
 
 # -------------------------
@@ -51,6 +52,14 @@ def today_if_none(d: Optional[date]) -> date:
     return d if d else date.today()
 
 
+def normalize_text(value: str) -> str:
+    """
+    Remove acentos/maiúsculas para facilitar match textual.
+    """
+    txt = unicodedata.normalize("NFKD", value or "").lower()
+    return "".join(ch for ch in txt if not unicodedata.combining(ch))
+
+
 # -------------------------
 # Leitura CSV (separador ;)
 # -------------------------
@@ -94,9 +103,97 @@ class DataSources:
     transicao_cbs: List[Dict[str, str]]
     cclastrib: List[Dict[str, str]]
     cst_ibs_cbs_map: List[Dict[str, str]]
+    cfop_map: Dict[str, Dict[str, str]]
+    ncm_beneficiados_zfm: List[Dict[str, str]]
 
     # modelos de anexos (ex: essenciais, alimentos in natura, agro, medicos, etc.)
     anexos_models: Dict[str, List[Dict[str, str]]]
+
+
+def build_cfop_index(rows: List[Dict[str, str]]) -> Dict[str, Dict[str, str]]:
+    index: Dict[str, Dict[str, str]] = {}
+    for r in rows:
+        code = norm_code(r.get("CFOP") or r.get("cfop") or "")
+        if code:
+            index[code] = r
+    return index
+
+
+def detect_producao_emitente(cfop_code: str, cfop_row: Optional[Dict[str, str]]) -> Optional[bool]:
+    """
+    True  -> CFOP de saída indicando produção do próprio estabelecimento.
+    False -> CFOP válido mas sem indício de produção própria (ou entradas).
+    None  -> CFOP não encontrado.
+    """
+    if not cfop_row:
+        return None
+
+    desc = (
+        cfop_row.get("DESCRICAO_CFOP")
+        or cfop_row.get("DESCRIÇÃO_CFOP")
+        or cfop_row.get("descricao_cfop")
+        or ""
+    )
+
+    cfop_norm = norm_code(cfop_code)
+    if not cfop_norm:
+        return None
+
+    # Entradas/prestações não indicam produção do emitente (1xxx/2xxx/3xxx)
+    if cfop_norm[0] not in ("5", "6", "7"):
+        return False
+
+    desc_norm = normalize_text(desc)
+    keywords = [
+        "producao do estabelecimento",
+        "producao propria",
+        "produto de fabricacao do estabelecimento",
+        "industrializado pelo proprio estabelecimento",
+        "venda de producao do estabelecimento",
+        "remessa de producao do estabelecimento",
+        "devolucao de producao do estabelecimento",
+        "retorno de mercadoria de producao do estabelecimento",
+    ]
+
+    return any(k in desc_norm for k in keywords)
+
+
+def detect_venda_industrializada(cfop_code: str, cfop_row: Optional[Dict[str, str]]) -> Optional[bool]:
+    """
+    Detecta CFOPs de venda de produtos industrializados pelo estabelecimento.
+    """
+    if not cfop_row:
+        return None
+
+    cfop_norm = norm_code(cfop_code)
+    if not cfop_norm or cfop_norm[0] not in ("5", "6", "7"):
+        return False
+
+    desc = (
+        cfop_row.get("DESCRICAO_CFOP")
+        or cfop_row.get("DESCRIÇÃO_CFOP")
+        or cfop_row.get("descricao_cfop")
+        or ""
+    )
+    desc_norm = normalize_text(desc)
+
+    keywords = [
+        "venda de producao do estabelecimento",
+        "venda de produto industrializado",
+        "produto industrializado",
+        "industrializacao propria",
+        "producao do estabelecimento",
+    ]
+
+    return any(k in desc_norm for k in keywords)
+
+
+def is_ncm_beneficiado_zfm(sources: DataSources, ncm_digits: str) -> bool:
+    for r in sources.ncm_beneficiados_zfm:
+        raw = r.get("ncm") or r.get("NCM") or ""
+        if norm_ncm(raw)[:8] == ncm_digits[:8]:
+            return True
+    return False
 
 
 def load_sources(data_anexos_dir: str) -> DataSources:
@@ -109,6 +206,10 @@ def load_sources(data_anexos_dir: str) -> DataSources:
         if fname.lower().endswith("_model.csv"):
             anexos_models[fname] = read_csv_semicolon(p(fname))
 
+    cfop_rows = read_csv_semicolon(p("cfop.csv"))
+    cfop_index = build_cfop_index(cfop_rows)
+    ncm_beneficiados_zfm = read_csv_semicolon(p("ncm_beneficiados_zfm.csv"))
+
     return DataSources(
         base_dir=data_anexos_dir,
         ncm_master=read_csv_semicolon(p("ncm_master.csv")),
@@ -120,6 +221,8 @@ def load_sources(data_anexos_dir: str) -> DataSources:
         transicao_cbs=read_csv_semicolon(p("transicao_cbs.csv")),
         cclastrib=read_csv_semicolon(p("cclastrib.csv")),
         cst_ibs_cbs_map=read_csv_semicolon(p("cst_ibs_cbs_map.csv")),
+        cfop_map=cfop_index,
+        ncm_beneficiados_zfm=ncm_beneficiados_zfm,
         anexos_models=anexos_models,
     )
 
@@ -299,7 +402,15 @@ def map_cst_ibs_cbs_from_cclastrib(
     # fallback seguro
     return ("000", "000001", "Tributação integral - padrão")
 
-def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d: str, cst_icms: str) -> Tuple[str, str, List[Dict[str, str]]]:
+def pick_cclastrib(
+    sources: DataSources,
+    regime: str,
+    cfop: str,
+    uf_e: str,
+    uf_d: str,
+    cst_icms: str,
+    zfm_context: bool = False,
+) -> Tuple[str, str, List[Dict[str, str]]]:
     """
     cclastrib.csv deve ser sua tabela de "classificação" operacional.
     Esperamos colunas aproximadas:
@@ -314,6 +425,13 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
 
     candidatos = []
     for r in sources.cclastrib:
+        aplica_zfm = norm_code(r.get("aplica_zfm") or r.get("apply_zfm") or "")
+        aplica_zfm_flag = aplica_zfm in ("S", "SIM", "1", "TRUE", "T", "Y")
+
+        # Evita selecionar regras marcadas para ZFM quando o contexto não é ZFM
+        if aplica_zfm_flag and not zfm_context:
+            continue
+
         r_reg = norm_code(r.get("regime_emitente") or r.get("regime") or r.get("regime_fiscal") or "")
         r_cfop = norm_code(r.get("cfop") or "")
         r_ufe = norm_code(r.get("uf_origem") or r.get("uf_emitente") or "")
@@ -343,6 +461,8 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
 
     # prioriza o mais "específico" (mais campos preenchidos)
     def score(r: Dict[str, str]) -> int:
+        aplica_zfm_local = norm_code(r.get("aplica_zfm") or r.get("apply_zfm") or "")
+        aplica_zfm_flag_local = aplica_zfm_local in ("S", "SIM", "1", "TRUE", "T", "Y")
         keys = [
             "regime_emitente",
             "regime",
@@ -354,7 +474,11 @@ def pick_cclastrib(sources: DataSources, regime: str, cfop: str, uf_e: str, uf_d
             "uf_destinatario",
             "cst_icms",
         ]
-        return sum(1 for k in keys if (r.get(k) or "").strip() and (r.get(k) or "").strip() != "*")
+        base_score = sum(1 for k in keys if (r.get(k) or "").strip() and (r.get(k) or "").strip() != "*")
+        # favorece regras específicas para ZFM quando o contexto for ZFM
+        if zfm_context and aplica_zfm_flag_local:
+            base_score += 10
+        return base_score
 
     candidatos.sort(key=score, reverse=True)
 
@@ -469,16 +593,98 @@ def classify(
     compra_gov: bool,
     ind_doacao: bool,
     produzido_zfm: bool,
+    emitente_zfm: bool,
+    destinatario_zfm: bool,
+    cadastro_suframa_emitente: Optional[str],
+    cadastro_suframa_emitente_ativo: Optional[bool],
+    cadastro_suframa_destinatario: Optional[str],
+    cadastro_suframa_destinatario_ativo: Optional[bool],
+    cod_municipio_destinatario: Optional[int] = None,
 ) -> Dict[str, Any]:
 
     fundamentos_gerais: List[Dict[str, str]] = []
     alertas: List[str] = []
     pendencias: List[str] = []
 
+    cfop_code = norm_code(cfop)
+    cfop_row = sources.cfop_map.get(cfop_code)
+    produzido_emitente = detect_producao_emitente(cfop_code, cfop_row)
+    cfop_venda_industrializado = detect_venda_industrializada(cfop_code, cfop_row)
+
+    if cfop_row:
+        desc_cfop = (
+            cfop_row.get("DESCRICAO_CFOP")
+            or cfop_row.get("DESCRIÇÃO_CFOP")
+            or cfop_row.get("descricao_cfop")
+            or ""
+        )
+        motivo_cfop = f"{cfop_code} - {desc_cfop}".strip()
+        if produzido_emitente is True:
+            motivo_cfop = f"{motivo_cfop} (produção do emitente)"
+        fundamentos_gerais.append({
+            "regra": "CFOP",
+            "motivo": motivo_cfop,
+            "fonte": "cfop.csv"
+        })
+        if cfop_venda_industrializado:
+            fundamentos_gerais.append({
+                "regra": "CFOP INDUSTRIALIZADO",
+                "motivo": f"{cfop_code} indica venda de produto industrializado pelo emitente",
+                "fonte": "cfop.csv"
+            })
+    elif cfop_code:
+        fundamentos_gerais.append({
+            "regra": "CFOP",
+            "motivo": f"CFOP {cfop_code} não encontrado em cfop.csv",
+            "fonte": "cfop.csv"
+        })
+
     # -------------------------
-    # NCM / Categoria
+    # ZFM / SUFRAMA (emitente e destinatário)
+    # -------------------------
+    if emitente_zfm:
+        fundamentos_gerais.append({
+            "regra": "ZFM EMITENTE",
+            "motivo": f"Emitente localizado em área de ZFM/ALC (UF {uf_emit})",
+            "fonte": "Entrada da API"
+        })
+    if destinatario_zfm:
+        fundamentos_gerais.append({
+            "regra": "ZFM DESTINATÁRIO",
+            "motivo": f"Destinatário localizado em área de ZFM/ALC (UF {uf_dest}{f', cMun {cod_municipio_destinatario}' if cod_municipio_destinatario else ''})",
+            "fonte": "Entrada da API"
+        })
+
+    suf_emit = (cadastro_suframa_emitente or "").strip()
+    suf_dest = (cadastro_suframa_destinatario or "").strip()
+
+    if not suf_emit:
+        pendencias.append("Cadastro SUFRAMA do emitente não informado")
+    else:
+        fundamentos_gerais.append({
+            "regra": "SUFRAMA EMITENTE",
+            "motivo": f"Cadastro {suf_emit} informado; ativo={cadastro_suframa_emitente_ativo}",
+            "fonte": "Entrada da API"
+        })
+        if cadastro_suframa_emitente_ativo is False:
+            alertas.append("Cadastro SUFRAMA do emitente informado como inativo")
+
+    if not suf_dest:
+        pendencias.append("Cadastro SUFRAMA do destinatário não informado")
+    else:
+        fundamentos_gerais.append({
+            "regra": "SUFRAMA DESTINATÁRIO",
+            "motivo": f"Cadastro {suf_dest} informado; ativo={cadastro_suframa_destinatario_ativo}",
+            "fonte": "Entrada da API"
+        })
+        if cadastro_suframa_destinatario_ativo is False:
+            alertas.append("Cadastro SUFRAMA do destinatário informado como inativo")
+
+    # -------------------------
+    # NCM / Categoria / Benefícios ZFM
     # -------------------------
     ncm_digits = norm_ncm(ncm)
+    ncm_beneficiado_zfm = is_ncm_beneficiado_zfm(sources, ncm_digits)
 
 # 🔎 DEBUG TEMPORÁRIO — COLOQUE AQUI
     print("DEBUG NCM solicitado:", ncm_digits)
@@ -539,13 +745,36 @@ def classify(
             "Tributação aplicada pela regra geral (fallback)"
         )
 
+    if ncm_beneficiado_zfm:
+        fundamentos_gerais.append({
+            "regra": "NCM BENEFÍCIO ZFM",
+            "motivo": f"NCM {ncm_digits} listado para benefício de IBS na ZFM",
+            "fonte": "ncm_beneficiados_zfm.csv"
+        })
+
 
     # -------------------------
     # cClasTrib operacional
     # -------------------------
-    cod_cclastrib, desc_cclastrib, _ = pick_cclastrib(
-        sources, regime, cfop, uf_emit, uf_dest, cst_icms
+    zfm_context = (
+        emitente_zfm
+        and cadastro_suframa_emitente_ativo is True
+        and produzido_zfm
+        and ncm_beneficiado_zfm
     )
+
+    cod_cclastrib, desc_cclastrib, candidatos_cclastrib = pick_cclastrib(
+        sources, regime, cfop, uf_emit, uf_dest, cst_icms, zfm_context=zfm_context
+    )
+
+    # fallback seguro para produção própria (CFOP 5101/6101) se não houver match no CSV
+    if cod_cclastrib == "REGRA-GERAL" and produzido_emitente:
+        if cfop_code == "5101":
+            cod_cclastrib = "VDA-PROPRIA-INTRA"
+            desc_cclastrib = "Venda de produção do estabelecimento (interna)"
+        elif cfop_code == "6101":
+            cod_cclastrib = "VDA-PROPRIA-INTER"
+            desc_cclastrib = "Venda de produção do estabelecimento (interestadual)"
 
     fundamentos_gerais.append({
         "regra": "cClasTrib",
@@ -554,16 +783,26 @@ def classify(
     })
 
     # -------------------------
-    # CST / cClassTrib IBS-CBS (VINDO DO CSV OFICIAL)
+    # CST / cClassTrib IBS-CBS
     # -------------------------
-    cst_ibs_cbs, cclass_trib = map_cst_ibs_cbs_from_categoria(
-        categoria or "GERAL"
+    # Tenta mapear primeiro por cclastrib (CSV dedicado); cai para o fallback por categoria se não houver entrada.
+    cst_ibs_cbs, cclass_trib, desc_cst = map_cst_ibs_cbs_from_cclastrib(
+        sources,
+        cod_cclastrib
     )
+    fonte_cst = "cst_ibs_cbs_map.csv"
+
+    if not cst_ibs_cbs or not cclass_trib:
+        cst_ibs_cbs, cclass_trib = map_cst_ibs_cbs_from_categoria(
+            categoria or "GERAL"
+        )
+        desc_cst = None
+        fonte_cst = "fallback categoria (map_cst_ibs_cbs_from_categoria)"
 
     fundamentos_gerais.append({
         "regra": "CST IBS/CBS",
-        "motivo": f"CST={cst_ibs_cbs} cClassTrib={cclass_trib}",
-        "fonte": "cst_ibs_cbs_map.csv"
+        "motivo": f"CST={cst_ibs_cbs} cClassTrib={cclass_trib}" + (f" ({desc_cst})" if desc_cst else ""),
+        "fonte": fonte_cst
     })
 
     # -------------------------
@@ -581,14 +820,34 @@ def classify(
     aliq_ibs = calc["aliquota_ibs"]
     aliq_cbs = calc["aliquota_cbs"]
 
-    if produzido_zfm:
-        aliq_ibs = apply_reducao(aliq_ibs, 100.0)
-        aliq_cbs = apply_reducao(aliq_cbs, 100.0)
+    beneficio_zfm_valido = zfm_context
+
+    if beneficio_zfm_valido:
+        aliq_ibs = 0.0
+
+        selected_row = candidatos_cclastrib[0] if candidatos_cclastrib else None
+        aplica_zfm_selected = False
+        if selected_row:
+            aplica_zfm_val = norm_code(selected_row.get("aplica_zfm") or selected_row.get("apply_zfm") or "")
+            aplica_zfm_selected = aplica_zfm_val in ("S", "SIM", "1", "TRUE", "T", "Y")
+
+        if not aplica_zfm_selected:
+            # fallback seguro se não houver regra ZFM no CSV
+            cod_cclastrib = "020003"
+            desc_cclastrib = "ZFM - Produção própria com benefício fiscal (LC 214/2025)"
+
         fundamentos_gerais.append({
             "regra": "LC 214/2025 (Capítulo ZFM, arts. 439-446)",
-            "motivo": "Item declarado como produzido na Zona Franca de Manaus: aplicado benefício fiscal para manter o diferencial competitivo (alíquota zero).",
-            "fonte": "lc214_2025.html / entrada da API (produzido_zfm=S)"
+            "motivo": "Emitente em ZFM com SUFRAMA ativa, item produzido na ZFM e NCM listado para benefício: IBS zerado.",
+            "fonte": "lc214_2025.html / entrada da API / ncm_beneficiados_zfm.csv"
         })
+        fundamentos_gerais.append({
+            "regra": "cClasTrib ZFM",
+            "motivo": f"Aplicado código {cod_cclastrib} (produção própria beneficiada na ZFM)",
+            "fonte": "cclastrib.csv"
+        })
+    elif emitente_zfm and produzido_zfm and not ncm_beneficiado_zfm:
+        alertas.append("NCM não listado para benefício ZFM; IBS calculado normalmente")
 
     # -------------------------
     # Flags especiais
@@ -629,6 +888,16 @@ def classify(
         },
         "cst_ibs_cbs": cst_ibs_cbs,
         "cclass_trib": cclass_trib,
+        "cfop_venda_industrializado": cfop_venda_industrializado,
+        "emitente_zfm": emitente_zfm,
+        "destinatario_zfm": destinatario_zfm,
+        "cadastro_suframa_emitente": suf_emit or None,
+        "cadastro_suframa_emitente_ativo": cadastro_suframa_emitente_ativo,
+        "cadastro_suframa_destinatario": suf_dest or None,
+        "cadastro_suframa_destinatario_ativo": cadastro_suframa_destinatario_ativo,
+        "produzido_emitente": produzido_emitente,
+        "beneficio_zfm_ibs_zero": beneficio_zfm_valido,
+        "ncm_beneficiado_zfm": ncm_beneficiado_zfm,
         "confianca": confianca,
         "alertas": alertas,
         "pendencias": pendencias,
@@ -638,5 +907,6 @@ def classify(
             "ind_doacao": ind_doacao,
             "aplicar_is": aplicar_is,
             "produzido_zfm": produzido_zfm,
+            "beneficio_zfm_ibs_zero": beneficio_zfm_valido,
         },
     }

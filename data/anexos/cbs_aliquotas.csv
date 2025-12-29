@@ -1,4 +1,6 @@
-cclastrib;ano;aliquota;fundamento_legal
-VDA-SN-INT;2026;0.12;LC214 art.20
-VDA-SN-INTER;2026;0.10;LC214 art.21
-DEV-ENT;2026;0.00;LC214 art.18
+tipo;aliquota;fundamento_legal;observacao
+PADRAO;0.000;LC214/2025 - definida via lei complementar especifica;Use transicao_cbs.csv para a fracao anual ate definicao da aliquota de referencia
+ESSENCIAL;0.000;LC214/2025 Anexo VIII;Preencher quando aliquota propria for regulamentada
+AGRO;0.000;LC214/2025 Anexo IX;Preencher quando aliquota propria for regulamentada
+ALIMENTOS_IN_NATURA;0.000;LC214/2025 Anexo XV;Preencher quando aliquota propria for regulamentada
+EQUIP_MEDICO;0.000;LC214/2025 Anexo XII;Preencher quando aliquota propria for regulamentada

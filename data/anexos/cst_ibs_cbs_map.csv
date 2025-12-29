@@ -5,3 +5,26 @@ VDA-SN-ISENTA;400;400001;Isenção - padrão;LC 214/2025 art. 8º
 IMUNE;410;410001;Imunidade / Não incidência;CF art. 150, VI
 SUSPENSAO;550;550001;Suspensão;LC 214/2025 art. 14
 DIFERIMENTO;510;510001;Diferimento;LC 214/2025 art. 15
+020003;000;020003;ZFM - Produção própria com benefício fiscal;LC 214/2025 Cap. ZFM
+VDA-PROPRIA-INTRA;000;000001;Venda de produção do estabelecimento (interna);LC 214/2025 regras gerais + CFOP 5101
+VDA-PROPRIA-INTER;000;000001;Venda de produção do estabelecimento (interestadual);LC 214/2025 regras gerais + CFOP 6101
+VDA-CESTA-NAC;000;000001;Venda cesta básica nacional (alíquota zero IBS/CBS);LC 214/2025 art. 28 + CFOP 5102
+VDA-PADRAO-NORMAL;000;000001;Venda mercadoria regime normal (interna);LC 214/2025 regras gerais + CFOP 5102
+VDA-PADRAO-INTER;000;000001;Venda mercadoria regime normal (interestadual);LC 214/2025 regras gerais + CFOP 6102
+VDA-SIMPLES;000;000001;Venda mercadoria optante Simples Nacional;LC 214/2025 art. 15
+VDA-ST-ANTEC;000;000001;Venda com substituição tributária anterior;LC 214/2025 art. 150 + CFOP 5405
+VDA-ST-ANTEC-INTER;000;000001;Venda interestadual com substituição tributária anterior;LC 214/2025 art. 150 + CFOP 6405
+DEV-VENDA-ENTRADA;000;000001;Devolução de venda (entrada do cliente);LC 214/2025 devolução/estorno + CFOP 1202
+DEV-VENDA-ENTRADA-INTER;000;000001;Devolução de venda interestadual (entrada);LC 214/2025 devolução/estorno + CFOP 2202
+DEV-COMPRA-SAIDA;000;000001;Devolução de compra ao fornecedor;LC 214/2025 devolução/estorno + CFOP 5202
+DEV-COMPRA-SAIDA-INTER;000;000001;Devolução de compra interestadual ao fornecedor;LC 214/2025 devolução/estorno + CFOP 6202
+TRANSF-ESTOQUE-INTRA;000;000001;Transferência de estoque entre filiais (interna);LC 214/2025 circulação não onerosa + CFOP 5152
+TRANSF-ESTOQUE-INTER;000;000001;Transferência de estoque entre filiais (interestadual);LC 214/2025 circulação não onerosa + CFOP 6152
+REM-BONUS-INTRA;000;000001;Remessa por bonificação/doação sem cobrança;LC 214/2025 remessa sem preço + CFOP 5910
+REM-BONUS-INTER;000;000001;Remessa por bonificação/doação interestadual;LC 214/2025 remessa sem preço + CFOP 6910
+REM-DEMO-INTRA;000;000001;Remessa para demonstração/mostruário;LC 214/2025 remessa para demonstração + CFOP 5911
+REM-DEMO-INTER;000;000001;Remessa para demonstração/mostruário (interestadual);LC 214/2025 remessa para demonstração + CFOP 6911
+REM-IND-INTRA;000;000001;Remessa para industrialização por encomenda;LC 214/2025 industrialização por encomenda + CFOP 5901
+REM-IND-INTER;000;000001;Remessa para industrialização por encomenda (interestadual);LC 214/2025 industrialização por encomenda + CFOP 6901
+RET-IND-INTRA;000;000001;Retorno de industrialização por encomenda;LC 214/2025 retorno industrialização + CFOP 5902
+RET-IND-INTER;000;000001;Retorno de industrialização por encomenda (interestadual);LC 214/2025 retorno industrialização + CFOP 6902
