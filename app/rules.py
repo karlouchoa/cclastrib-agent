@@ -536,6 +536,7 @@ def compute_ibs_cbs(
     ncm: str,
     data_emissao: date,
     categoria_hint: Optional[str],
+    fornecimento_alimentacao: bool = False,
 ) -> Dict[str, Any]:
 
     fundamentos: List[Dict[str, str]] = []
@@ -571,12 +572,22 @@ def compute_ibs_cbs(
         "fonte": "transicao_cbs.csv"
     })
 
+    p_red_bares_restaurantes = 40.0 if fornecimento_alimentacao else None
+    if p_red_bares_restaurantes:
+        ibs = apply_reducao(ibs, p_red_bares_restaurantes)
+        cbs = apply_reducao(cbs, p_red_bares_restaurantes)
+        fundamentos.append({
+            "regra": "LC 214/2025 arts. 273-275",
+            "motivo": "Fornecimento de alimentação por bares/restaurantes: redução de 40% nas alíquotas de IBS e CBS",
+            "fonte": "lc214_2025.html (regime específico)"
+        })
+
     return {
         "ano_referencia": year,
         "aliquota_ibs": ibs,
         "aliquota_cbs": cbs,
-        "p_red_ibs": None,
-        "p_red_cbs": None,
+        "p_red_ibs": p_red_bares_restaurantes,
+        "p_red_cbs": p_red_bares_restaurantes,
         "fundamentos": fundamentos,
     }
 
@@ -600,6 +611,7 @@ def classify(
     cadastro_suframa_destinatario: Optional[str],
     cadastro_suframa_destinatario_ativo: Optional[bool],
     cod_municipio_destinatario: Optional[int] = None,
+    fornecimento_alimentacao: bool = False,
 ) -> Dict[str, Any]:
 
     fundamentos_gerais: List[Dict[str, str]] = []
@@ -812,7 +824,8 @@ def classify(
         sources,
         ncm=ncm,
         data_emissao=data_emissao,
-        categoria_hint=categoria
+        categoria_hint=categoria,
+        fornecimento_alimentacao=fornecimento_alimentacao,
     )
 
     fundamentos_gerais.extend(calc["fundamentos"])
@@ -852,6 +865,16 @@ def classify(
     # -------------------------
     # Flags especiais
     # -------------------------
+    if fornecimento_alimentacao:
+        fundamentos_gerais.append({
+            "regra": "REGIME BARES/RESTAURANTES",
+            "motivo": "Fornecimento de alimentaÇõÇœ informado na requisiÇõÇœ: aplicar reduÇõÇœo de 40% (arts. 273-275 LC 214/2025)",
+            "fonte": "Entrada da API"
+        })
+        alertas.append(
+            "Regime bares/restaurantes: vedada apropriaÇõÇœ de crÇðditos pelo adquirente (art. 276 LC 214/2025)"
+        )
+
     aplicar_is = should_apply_is(data_emissao, categoria)
 
     if compra_gov:
@@ -908,5 +931,6 @@ def classify(
             "aplicar_is": aplicar_is,
             "produzido_zfm": produzido_zfm,
             "beneficio_zfm_ibs_zero": beneficio_zfm_valido,
+            "fornecimento_alimentacao": fornecimento_alimentacao,
         },
     }

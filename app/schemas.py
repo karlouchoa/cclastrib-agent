@@ -34,6 +34,7 @@ class ClassifyRequest(BaseModel):
     refs_pag_antecipado: Optional[List[str]] = Field(default_factory=list, description="Lista de chaves refNFe de pagamento antecipado")
     dfe_referenciado_chave: Optional[str] = Field("", description="Chave de DF-e referenciado no item")
     dfe_referenciado_nitem: Optional[int] = Field(1, description="nItem do DF-e referenciado")
+    fornecimento_alimentacao: Optional[bool] = Field(False, description="S se for fornecimento de alimentaÇõÇœ por bares/restaurantes (art. 273 LC 214/2025)")
 
 
 # -------------------------
@@ -370,6 +371,8 @@ class ClassifyLoteRequest(BaseModel):
     cadastro_suframa_emitente_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do emitente está ativo")
     cadastro_suframa_destinatario: Optional[str] = Field("", description="Número SUFRAMA do destinatário")
     cadastro_suframa_destinatario_ativo: Optional[str] = Field(None, description="S/N se cadastro SUFRAMA do destinatário está ativo")
+
+    fornecimento_alimentacao: Optional[bool] = Field(False, description="S se for fornecimento de alimentaÇõÇœ por bares/restaurantes (art. 273 LC 214/2025)")
 
     itens: List[ClassifyLoteItem]
 

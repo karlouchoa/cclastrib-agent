@@ -56,6 +56,7 @@ class CClastribAgent:
         produzido_zfm = (req.produzido_zfm or "").strip().upper() == "S"
         emitente_zfm = (req.emitente_zona_franca_manaus or "").strip().upper() == "S"
         destinatario_zfm = (req.destinatario_zona_franca_manaus or "").strip().upper() == "S"
+        fornecimento_alimentacao = bool(req.fornecimento_alimentacao)
 
         cadastro_suframa_emitente = (req.cadastro_suframa_emitente or "").strip()
         cadastro_suframa_destinatario = (req.cadastro_suframa_destinatario or "").strip()
@@ -90,6 +91,7 @@ class CClastribAgent:
             "DZFM" if destinatario_zfm else "NODZFM",
             f"SUFE_{'P' if cadastro_suframa_emitente else 'NP'}_{'AT' if cadastro_suframa_emitente_ativo else 'IN' if cadastro_suframa_emitente_ativo is False else 'NA'}",
             f"SUFD_{'P' if cadastro_suframa_destinatario else 'NP'}_{'AT' if cadastro_suframa_destinatario_ativo else 'IN' if cadastro_suframa_destinatario_ativo is False else 'NA'}",
+            "ALIM" if fornecimento_alimentacao else "NOALIM",
         )
 
         cached = self._cache.get(cache_key)
@@ -115,6 +117,7 @@ class CClastribAgent:
             cadastro_suframa_destinatario=cadastro_suframa_destinatario,
             cadastro_suframa_destinatario_ativo=cadastro_suframa_destinatario_ativo,
             cod_municipio_destinatario=req.cod_municipio_destinatario,
+            fornecimento_alimentacao=fornecimento_alimentacao,
         )
 
         # -------------------------
@@ -364,6 +367,7 @@ class CClastribAgent:
                 refs_pag_antecipado=req.refs_pag_antecipado,
                 ncm=item.ncm,
                 valor_item=item.valor_item,
+                fornecimento_alimentacao=req.fornecimento_alimentacao,
             )
 
             resultado = self.handle(req_item)
