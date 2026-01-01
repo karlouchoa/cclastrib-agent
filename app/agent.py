@@ -345,6 +345,11 @@ class CClastribAgent:
         resultados = []
 
         for item in req.itens:
+            quantidade = item.quantidade if item.quantidade is not None else 1
+            valor_item = item.valor_item
+            if valor_item is None and item.preco is not None and quantidade is not None:
+                valor_item = float(item.preco) * float(quantidade)
+
             # Each item can have its own CFOP/CST, so use the item fields
             req_item = ClassifyRequest(
                 ano_emissao=req.ano_emissao,
@@ -366,7 +371,7 @@ class CClastribAgent:
                 produzido_zfm=item.produzido_zfm,
                 refs_pag_antecipado=req.refs_pag_antecipado,
                 ncm=item.ncm,
-                valor_item=item.valor_item,
+                valor_item=valor_item,
                 fornecimento_alimentacao=req.fornecimento_alimentacao,
             )
 
@@ -374,7 +379,17 @@ class CClastribAgent:
 
             resultados.append(
                 ClassifyLoteItemResponse(
+                    item=item.item,
+                    cditem=item.cditem,
+                    deitem=item.deitem,
+                    und=item.und,
+                    preco=item.preco,
+                    quantidade=quantidade,
                     ncm=item.ncm,
+                    valor_item=valor_item,
+                    cst_icms=item.cst_icms,
+                    cfop=item.cfop,
+                    produzido_zfm=item.produzido_zfm,
                     resultado=resultado
                 )
             )

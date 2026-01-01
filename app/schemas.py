@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import List, Optional, Literal, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Optional, Literal, Dict, Any, Union
+from pydantic import BaseModel, Field, ConfigDict
 
 print(">>> ProdutoTags carregado de:", __file__)
 
@@ -347,12 +347,19 @@ class ClassifyResponse(BaseModel):
     fundamentos_gerais: List[FundamentoItem]
 
 class ClassifyLoteItem(BaseModel):
+    item: int = Field(..., description="Sequencial do item no documento")
+    cditem: Optional[Union[str, int]] = Field(None, description="Codigo interno do item")
+    deitem: Optional[str] = Field(None, description="Descricao do item")
+    und: Optional[str] = Field(None, description="Unidade de venda")
+    preco: Optional[float] = Field(None, description="Preco unitario")
+    quantidade: Optional[float] = Field(1, alias="qtde", description="Quantidade do item")
     ncm: str
     valor_item: Optional[float] = None
-    quantidade: Optional[float] = 1
     cst_icms: str
     cfop: str
-    produzido_zfm: str   
+    produzido_zfm: str
+
+    model_config = ConfigDict(populate_by_name=True)
 
 class ClassifyLoteRequest(BaseModel):
     ano_emissao: int
@@ -377,8 +384,20 @@ class ClassifyLoteRequest(BaseModel):
     itens: List[ClassifyLoteItem]
 
 class ClassifyLoteItemResponse(BaseModel):
+    item: int
+    cditem: Optional[Union[str, int]] = None
+    deitem: Optional[str] = None
+    und: Optional[str] = None
+    preco: Optional[float] = None
+    quantidade: Optional[float] = Field(None, alias="qtde")
     ncm: str
+    valor_item: Optional[float] = None
+    cst_icms: str
+    cfop: str
+    produzido_zfm: str
     resultado: ClassifyResponse
+
+    model_config = ConfigDict(populate_by_name=True)
 
 class ClassifyLoteResponse(BaseModel):
     ano_emissao: int
