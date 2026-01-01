@@ -76,6 +76,11 @@ class CClastribAgent:
                 return None
             return round(float(v), 2)
 
+        def round_rate(v, ndigits: int = 6):
+            if v is None:
+                return None
+            return round(float(v), ndigits)
+
         cache_key = make_cache_key(
             req.regime_fiscal_emitente,
             req.cfop,
@@ -127,6 +132,12 @@ class CClastribAgent:
             FundamentoItem(**f) for f in result.get("fundamentos_gerais", [])
         ]
 
+        # Aliquotas em base decimal (ex: 0.001). Mantemos para calculo, mas devolvemos em percentual (ex: 0.1).
+        aliq_ibs_base = result["ibs"]["aliquota"]
+        aliq_cbs_base = result["cbs"]["aliquota"]
+        aliq_ibs_exibicao = round_rate((aliq_ibs_base * 100.0) if aliq_ibs_base is not None else None)
+        aliq_cbs_exibicao = round_rate((aliq_cbs_base * 100.0) if aliq_cbs_base is not None else None)
+
         cclastrib = BlocoResultado(
             codigo=result["cclastrib"]["codigo"],
             descricao=result["cclastrib"]["descricao"],
@@ -140,7 +151,7 @@ class CClastribAgent:
         )
 
         ibs = BlocoResultado(
-            aliquota=result["ibs"]["aliquota"],
+            aliquota=aliq_ibs_exibicao,
             fundamento=[
                 FundamentoItem(
                     regra="LC 214/2025",
@@ -151,7 +162,7 @@ class CClastribAgent:
         )
 
         cbs = BlocoResultado(
-            aliquota=result["cbs"]["aliquota"],
+            aliquota=aliq_cbs_exibicao,
             fundamento=[
                 FundamentoItem(
                     regra="LC 214/2025",
@@ -203,8 +214,8 @@ class CClastribAgent:
         # Base de cálculo e valores (se valor_item vier)
         vbc = float(req.valor_item) if req.valor_item is not None else None
         vbc = round_money(vbc)
-        p_ibs = float(result["ibs"]["aliquota"]) * 100.0 if result["ibs"]["aliquota"] is not None else None
-        p_cbs = float(result["cbs"]["aliquota"]) * 100.0 if result["cbs"]["aliquota"] is not None else None
+        p_ibs = round_rate(float(aliq_ibs_base) * 100.0 if aliq_ibs_base is not None else None)
+        p_cbs = round_rate(float(aliq_cbs_base) * 100.0 if aliq_cbs_base is not None else None)
 
         v_ibs = (vbc * (p_ibs / 100.0)) if (vbc is not None and p_ibs is not None) else None
         v_cbs = (vbc * (p_cbs / 100.0)) if (vbc is not None and p_cbs is not None) else None
